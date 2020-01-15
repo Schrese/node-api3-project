@@ -2,7 +2,8 @@ const express = require('express');
 
 const router = express.Router();
 
-const Users = require('./userDb.js')
+const Users = require('./userDb.js');
+const Post = require('../posts/postDb.js')
 
 //POST new user to all users (insert()) MAYBE?????
 router.post('/', (req, res) => {
@@ -26,6 +27,23 @@ router.post('/', (req, res) => {
 //POST new post by user (insert()) MAYBE????
 router.post('/:id/posts', (req, res) => {
   // do your magic!
+  const newPost = req.body;
+  const user_id = req.params.id;
+  const newObj = {text: newPost.text, user_id}
+
+  Post.insert(newObj)
+    .then(newP => {
+      if (newP.text.length === 0) {
+        res.status(400).json({ message: 'Please provide text for the post.' })
+      } else {
+        res.status(201).json({newPost})
+      }
+    })
+    .catch(err => {
+      console.log('error creating new post', err)
+      res.status(500).json({ errorMessage: 'There was an error while saving the post to the database.' })
+    })
+
 });
 
 //GET all users (get())
