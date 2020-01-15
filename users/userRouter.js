@@ -4,9 +4,23 @@ const router = express.Router();
 
 const Users = require('./userDb.js')
 
-//POST all users (insert()) MAYBE?????
+//POST new user to all users (insert()) MAYBE?????
 router.post('/', (req, res) => {
   // do your magic!
+  const newUser = req.body;
+  if(newUser.name.length === 0) {
+    res.status(400).json({ message: 'Please provide a name for this user. ' })
+  } else {
+    Users.insert(newUser)
+    .then(newU => {
+      res.status(201).json({newU})
+    })
+    .catch(err => {
+      console.log('error creating a new user', err)
+      res.status(500).json({ errorMessage: 'There was an error while saving the user to the database.' })
+    })
+  }
+  
 });
 
 //POST new post by user (insert()) MAYBE????
@@ -67,6 +81,16 @@ router.get('/:id/posts', (req, res) => {
 //DELETE user by id (remove())
 router.delete('/:id', (req, res) => {
   // do your magic!
+  const id = req.params.id;
+  Users.remove(id)
+    .then(deleted => {
+      res.status(200).json({ message: 'User has been successfully deleted.' })
+    })
+    .catch(err => {
+      console.log('error in delete', err)
+      res.status(500).json({ errorMessage: 'The post could not be removed.' })
+    })
+  
 });
 
 //PUT edits user info by id (update())
