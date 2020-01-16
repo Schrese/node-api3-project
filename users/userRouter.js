@@ -6,7 +6,7 @@ const Users = require('./userDb.js');
 const Post = require('../posts/postDb.js');
 
 //POST new user to all users (insert()) MAYBE?????
-router.post('/', (req, res) => {
+router.post('/', validateUser, (req, res) => {
   // do your magic!
   const newUser = req.body;
   if(newUser.name.length === 0) {
@@ -25,19 +25,15 @@ router.post('/', (req, res) => {
 });
 
 //POST new post by user (insert()) MAYBE????
-router.post('/:id/posts', (req, res) => {
+router.post('/:id/posts', validatePost, (req, res) => {
   // do your magic!
   const newPost = req.body;
   const user_id = req.params.id;
   const newObj = {text: newPost.text, user_id}
-
+  console.log(req.body)
   Post.insert(newObj)
     .then(newP => {
-      if (newP.text.length === 0) {
-        res.status(400).json({ message: 'Please provide text for the post.' })
-      } else {
         res.status(201).json({newPost})
-      }
     })
     .catch(err => {
       console.log('error creating new post', err)
@@ -61,16 +57,12 @@ router.get('/', (req, res) => {
 });
 
 //GET user by id (getById())
-router.get('/:id', (req, res) => {
+router.get('/:id', validateUserId, (req, res) => {
   // do your magic!
   const id = req.params.id;
   Users.getById(id)
     .then(user => {
-      if (!user) {
-        res.status(404).json({errorMessage: "The post with the specified ID does not exist."})
-      } else {
         res.status(200).json({user})
-      }
     })
     .catch(err => {
       console.log('error getting specified user', err)
@@ -79,16 +71,12 @@ router.get('/:id', (req, res) => {
 });
 
 //GET posts by user id (getUserPosts())
-router.get('/:id/posts', (req, res) => {
+router.get('/:id/posts', validateUserId, (req, res) => {
   // do your magic!
   const id = req.params.id;
   Users.getUserPosts(id)
     .then(posts => {
-      if (posts.length === 0) {
-        res.status(404).json({ message: "The posts with the specified ID does not exist. "})
-      } else {
         res.status(200).json({posts})
-      }
     })
     .catch(err => {
       console.log('error getting posts for this user id', err)
@@ -97,7 +85,7 @@ router.get('/:id/posts', (req, res) => {
 });
 
 //DELETE user by id (remove())
-router.delete('/:id', (req, res) => {
+router.delete('/:id', validateUserId, (req, res) => {
   // do your magic!
   const id = req.params.id;
   Users.remove(id)
@@ -112,15 +100,12 @@ router.delete('/:id', (req, res) => {
 });
 
 //PUT edits user info by id (update())
-router.put('/:id', (req, res) => {
+router.put('/:id', validateUserId, validateUser, (req, res) => {
   // do your magic!
   const id = req.params.id;
   const updateUser = req.body;
  
-    if (!id ) {
-      res.status(404).json({ message: 'Please provide a valid user.'})
-    } else {
-      Users.update(id, updateUser)
+    Users.update(id, updateUser)
       .then(upU => {
         console.log(upU)
         res.status(204).json({count: upU})
@@ -129,9 +114,6 @@ router.put('/:id', (req, res) => {
         console.log('error updating user', err)
         res.status(500).json({ errorMessage: 'The users information could not be modified.' })
       })
-    }
-    
-  
 
 });
 
@@ -139,14 +121,68 @@ router.put('/:id', (req, res) => {
 
 function validateUserId(req, res, next) {
   // do your magic!
+  const id = req.params.id;
+
+  Users.getById(id)
+    .then(userId => {
+      if (userId) {
+        next()
+      } else {
+        res.status(400).json({ message: "invalid user id" })
+      }
+    })
+    .catch(err => {
+      console.log('error in getting user by id', err)
+      res.status(400).json({ errorMessage: 'There was an error getting this users id.' })
+    })
+
 }
 
 function validateUser(req, res, next) {
   // do your magic!
+  const field = req.body;
+
+  if (!field) {
+    res.status(400).json({message: 'missing user data'})
+  } else if (field.name.length === 0) {
+    res.status(400).json({message: 'missing required name field'})
+  } else {
+    next();
+  }
+
 }
 
 function validatePost(req, res, next) {
   // do your magic!
+  const post = req.body;
+
+  if (!post) {
+    res.status(400).json({ message: 'missing post data' })
+  } else if (!post.text) {
+    res.status(400).json({ message: 'missing required text field' })
+  } else {
+    next();
+  }
+
+  // Users.getById(id)
+  //   .then(user => {
+  //     if (!user) {
+  //       res.status(404).json({message: 'This user could not be found.'})
+  //     } else {
+  //       if (!post) {
+  //         res.status(400).json({ message: 'missing post data' })
+  //       } else if (postData.text.length === 0) {
+  //         res.status(400).json({ message: 'missing required text field.' })
+  //       } else {
+  //         next();
+  //       }
+  //     } 
+  //   })
+    // .catch(err => {
+    //   console.log('error getting user', err)
+    //   res.status(500).json({ errorMessage: 'Uer info could not be found.' })
+    // })
+
 }
 
 module.exports = router;
