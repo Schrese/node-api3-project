@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 
 const Users = require('./userDb.js');
-const Post = require('../posts/postDb.js')
+const Post = require('../posts/postDb.js');
 
 //POST new user to all users (insert()) MAYBE?????
 router.post('/', (req, res) => {
@@ -114,6 +114,25 @@ router.delete('/:id', (req, res) => {
 //PUT edits user info by id (update())
 router.put('/:id', (req, res) => {
   // do your magic!
+  const id = req.params.id;
+  const updateUser = req.body;
+ 
+    if (!id ) {
+      res.status(404).json({ message: 'Please provide a valid user.'})
+    } else {
+      Users.update(id, updateUser)
+      .then(upU => {
+        console.log(upU)
+        res.status(204).json({count: upU})
+      })
+      .catch(err => {
+        console.log('error updating user', err)
+        res.status(500).json({ errorMessage: 'The users information could not be modified.' })
+      })
+    }
+    
+  
+
 });
 
 //custom middleware
