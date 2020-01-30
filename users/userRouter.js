@@ -25,7 +25,7 @@ router.post('/', validateUser, (req, res) => {
 });
 
 //POST new post by user (insert()) MAYBE????
-router.post('/:id/posts', validatePost, (req, res) => {
+router.post('/:id/posts', validateUserId, validatePost, (req, res) => {
   // do your magic!
   const newPost = req.body;
   const user_id = req.params.id;
@@ -108,7 +108,7 @@ router.put('/:id', validateUserId, validateUser, (req, res) => {
     Users.update(id, updateUser)
       .then(upU => {
         console.log(upU)
-        res.status(204).json({count: upU})
+        res.status(200).json({message: 'Successfully Updated!'})
       })
       .catch(err => {
         console.log('error updating user', err)
